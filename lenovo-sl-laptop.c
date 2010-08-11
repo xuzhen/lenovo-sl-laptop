@@ -672,8 +672,13 @@ static int backlight_init(void)
 		goto err;
 
 	memset(&props, 0, sizeof(struct backlight_properties));
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34)
 	backlight = backlight_device_register(LENSL_BACKLIGHT_NAME,
 			NULL, NULL, &lensl_backlight_ops, &props);
+#else
+	backlight = backlight_device_register(LENSL_BACKLIGHT_NAME,
+			NULL, NULL, &lensl_backlight_ops);
+#endif
 	backlight->props.max_brightness = backlight_levels.count - 1;
 	backlight->props.brightness = lensl_bd_get_brightness(backlight);
 	vdbg_printk(LENSL_INFO, "Started backlight brightness control\n");
