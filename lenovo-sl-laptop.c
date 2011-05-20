@@ -37,6 +37,7 @@
 #include <linux/hwmon-sysfs.h>
 #include <linux/backlight.h>
 #include <linux/platform_device.h>
+#include <linux/delay.h>
 
 #include <linux/input.h>
 #include <linux/kthread.h>
@@ -1046,24 +1047,40 @@ static int ec_scancode_to_keycode(u8 scancode)
 	return -EINVAL;
 }
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39)
+static int hkey_inputdev_getkeycode(struct input_dev *dev,
+                                    struct input_keymap_entry *ke)
+#else
 static int hkey_inputdev_getkeycode(struct input_dev *dev, int scancode,
 					int *keycode)
+#endif
 {
 	int result;
 
 	if (!dev)
 		return -EINVAL;
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39)
+    (void)result;
+    return 0;
+#else
 	result = ec_scancode_to_keycode(scancode);
 	if (result >= 0) {
 		*keycode = result;
 		return 0;
 	}
 	return result;
+#endif
 }
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39)
+static int hkey_inputdev_setkeycode(struct input_dev *dev,
+                                    const struct input_keymap_entry *ke,
+                                    unsigned int *oldkeycode)
+#else
 static int hkey_inputdev_setkeycode(struct input_dev *dev, int scancode,
 					int keycode)
+#endif
 {
 	struct key_entry *key;
 
@@ -1071,9 +1088,17 @@ static int hkey_inputdev_setkeycode(struct input_dev *dev, int scancode,
 		return -EINVAL;
 
 	for (key = ec_keymap; key->type != KE_END; key++)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39)
+        if (ke->keycode == key->scancode) {
+#else
 		if (scancode == key->scancode) {
+#endif
 			clear_bit(key->keycode, dev->keybit);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39)
+			key->keycode = ke->keycode;
+#else
 			key->keycode = keycode;
+#endif
 			set_bit(key->keycode, dev->keybit);
 			return 0;
 		}
