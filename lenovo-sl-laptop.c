@@ -1056,21 +1056,24 @@ static int hkey_inputdev_getkeycode(struct input_dev *dev, int scancode,
 #endif
 {
 	int result;
-
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39)
+    u8 scancode;
+    u32 *keycode;
+#endif
 	if (!dev)
 		return -EINVAL;
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39)
-    (void)result;
-    return 0;
-#else
+    scancode = ke->scancode[0];
+    keycode = &(ke->keycode);
+#endif
+
 	result = ec_scancode_to_keycode(scancode);
 	if (result >= 0) {
 		*keycode = result;
 		return 0;
 	}
 	return result;
-#endif
 }
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39)
@@ -1095,7 +1098,7 @@ static int hkey_inputdev_setkeycode(struct input_dev *dev, int scancode,
 #endif
 			clear_bit(key->keycode, dev->keybit);
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39)
-			key->keycode = ke->scancode[0];
+			key->keycode = ke->keycode;
 #else
 			key->keycode = keycode;
 #endif
