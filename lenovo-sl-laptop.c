@@ -1089,13 +1089,13 @@ static int hkey_inputdev_setkeycode(struct input_dev *dev, int scancode,
 
 	for (key = ec_keymap; key->type != KE_END; key++)
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39)
-        if (ke->keycode == key->scancode) {
+        if (ke->scancode[0] == key->scancode) {
 #else
 		if (scancode == key->scancode) {
 #endif
 			clear_bit(key->keycode, dev->keybit);
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39)
-			key->keycode = ke->keycode;
+			key->keycode = ke->scancode[0];
 #else
 			key->keycode = keycode;
 #endif
