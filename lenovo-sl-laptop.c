@@ -1222,7 +1222,11 @@ static void hkey_poll_stop(void)
 {
 	if (hkey_poll_task) {
 		if (frozen(hkey_poll_task) || freezing(hkey_poll_task))
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,3,0)
 			thaw_process(hkey_poll_task);
+#else
+			wake_up_process(hkey_poll_task);
+#endif
 
 		kthread_stop(hkey_poll_task);
 		hkey_poll_task = NULL;
