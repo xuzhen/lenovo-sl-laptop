@@ -1084,22 +1084,23 @@ static int hkey_inputdev_setkeycode(struct input_dev *dev, int scancode,
 #endif
 {
 	struct key_entry *key;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39)
+	u8 scancode;
+	u32 keycode;
+#endif
 
 	if (!dev)
 		return -EINVAL;
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39)
+	scancode = ke->scancode[0];
+	keycode = ke->keycode;
+#endif
+
 	for (key = ec_keymap; key->type != KE_END; key++)
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39)
-        if (ke->scancode[0] == key->scancode) {
-#else
 		if (scancode == key->scancode) {
-#endif
 			clear_bit(key->keycode, dev->keybit);
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39)
-			key->keycode = ke->keycode;
-#else
 			key->keycode = keycode;
-#endif
 			set_bit(key->keycode, dev->keybit);
 			return 0;
 		}
