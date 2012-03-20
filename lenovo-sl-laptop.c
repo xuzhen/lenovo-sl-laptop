@@ -97,25 +97,25 @@ static int control_backlight;
 static int bluetooth_auto_enable = 1;
 static int wwan_auto_enable = 1;
 static int uwb_auto_enable = 1;
-module_param(debug_ec, bool, S_IRUGO);
+module_param(debug_ec, int, S_IRUGO);
 MODULE_PARM_DESC(debug_ec,
 	"Present EC debugging interface in procfs. WARNING: writing to the "
 	"EC can hang your system and possibly damage your hardware.");
-module_param(control_backlight, bool, S_IRUGO);
+module_param(control_backlight, int, S_IRUGO);
 MODULE_PARM_DESC(control_backlight,
 	"Control backlight brightness; can conflict with ACPI video driver.");
 module_param_named(debug, dbg_level, uint, S_IRUGO);
 MODULE_PARM_DESC(debug,
 	"Set debug verbosity level (0 = nothing, 7 = everything).");
-module_param(bluetooth_auto_enable, bool, S_IRUGO);
+module_param(bluetooth_auto_enable, int, S_IRUGO);
 MODULE_PARM_DESC(bluetooth_auto_enable,
 	"Automatically enable bluetooth (if supported by hardware) when the "
 	"module is loaded.");
-module_param(wwan_auto_enable, bool, S_IRUGO);
+module_param(wwan_auto_enable, int, S_IRUGO);
 MODULE_PARM_DESC(wwan_auto_enable,
 	"Automatically enable WWAN (if supported by hardware) when the "
 	"module is loaded.");
-module_param(uwb_auto_enable, bool, S_IRUGO);
+module_param(uwb_auto_enable, int, S_IRUGO);
 MODULE_PARM_DESC(wwan_auto_enable,
 	"Automatically enable UWB (if supported by hardware) when the "
 	"module is loaded.");
