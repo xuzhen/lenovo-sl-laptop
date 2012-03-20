@@ -654,7 +654,6 @@ static void backlight_exit(void)
 static int backlight_init(void)
 {
 	int status = 0;
-	struct backlight_properties props;
 
 	lcdd_handle = NULL;
 	backlight = NULL;
@@ -672,10 +671,9 @@ static int backlight_init(void)
 	if (status || !backlight_levels.count)
 		goto err;
 
-	memset(&props, 0, sizeof(struct backlight_properties));
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34)
 	backlight = backlight_device_register(LENSL_BACKLIGHT_NAME,
-			NULL, NULL, &lensl_backlight_ops, &props);
+			NULL, NULL, &lensl_backlight_ops, NULL);
 #else
 	backlight = backlight_device_register(LENSL_BACKLIGHT_NAME,
 			NULL, NULL, &lensl_backlight_ops);
