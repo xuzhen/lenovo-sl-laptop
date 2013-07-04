@@ -1373,13 +1373,20 @@ static int lenovo_sl_procfs_init(void)
 	proc_dir->owner = THIS_MODULE;
 #endif
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,25)
+	proc_ec = create_proc_entry(LENSL_PROC_EC, 0600, proc_dir);
+#else
 	proc_ec = proc_create(LENSL_PROC_EC, 0600, proc_dir, &proc_fops);
+#endif
 	if (!proc_ec) {
 		vdbg_printk(LENSL_ERR,
 			"Failed to create proc entry acpi/%s/%s\n",
 			LENSL_PROC_DIRNAME, LENSL_PROC_EC);
 		return -ENOENT;
 	}
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,25)
+	proc_ec->proc_fops = &proc_fops;
+#endif
 	vdbg_printk(LENSL_DEBUG, "Initialized procfs debugging interface\n");
 
 	return 0;
