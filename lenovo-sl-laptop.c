@@ -1286,54 +1286,48 @@ static int hkey_inputdev_init(void)
 #define LENSL_PROC_EC "ec0"
 #define LENSL_PROC_DIRNAME LENSL_MODULE_NAME
 
+#define EC_MAX 255
+
 static struct proc_dir_entry *proc_dir;
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,10,0)
-int lensl_ec_read_procmem(struct file *file, char __user *buf,
+int lensl_ec_read_procmem(struct file *file, char __user *buffer,
 		size_t count, loff_t *offset)
-#else
-int lensl_ec_read_procmem(char *buf, char **start, off_t offset,
-		int count, int *eof, void *data)
-#endif
 {
 	int err, len = 0;
 	u8 i, result;
-	/* note: ec_read at i = 255 locks up my SL300 hard. -AR */
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,10,0)
-	if (*offset >= 255) {
+	char ec_buf[EC_MAX * 3 + (EC_MAX / 16 + (EC_MAX % 16 ? 1 : 0)) * 4 + 1];
+	int off = *offset;
+
+	if (off < 0 || off >= sizeof(ec_buf) || count <= 0) {
 		return 0;
 	}
-#endif
-	for (i = 0; i < 255; i++) {
+	if (count > sizeof(ec_buf) || count + off > sizeof(ec_buf)) {
+		count = sizeof(ec_buf) - off;
+	}
+
+	/* note: ec_read at i = 255 locks up my SL300 hard. -AR */
+	for (i = 0; i < EC_MAX; i++) {
 		if (!(i % 16)) {
 			if (i)
-				len += sprintf(buf+len, "\n");
-			len += sprintf(buf+len, "%02X:", i);
+				len += sprintf(ec_buf+len, "\n");
+			len += sprintf(ec_buf+len, "%02X:", i);
 		}
 		err = ec_read(i, &result);
 		if (!err)
-			len += sprintf(buf+len, " %02X", result);
+			len += sprintf(ec_buf+len, " %02X", result);
 		else
-			len += sprintf(buf+len, " **");
+			len += sprintf(ec_buf+len, " **");
 	}
-	len += sprintf(buf+len, "\n");
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,10,0)
-	*offset = 255;
-#else
-	*eof = 1;
-#endif
-	return len;
+	len += sprintf(ec_buf+len, "\n");
+	copy_to_user(buffer, ec_buf + off, count);
+	*offset += count;
+	return count;
 }
 
 /* we expect input in the format "%02X %02X", where the first number is
    the EC register and the second is the value to be written */
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,10,0)
 int lensl_ec_write_procmem(struct file *file, const char __user *buffer,
 				size_t count, loff_t *offset)
-#else
-int lensl_ec_write_procmem(struct file *file, const char *buffer,
-				unsigned long count, void *data)
-#endif
 {
 	char s[7];
 	unsigned int reg, val;
@@ -1345,7 +1339,7 @@ int lensl_ec_write_procmem(struct file *file, const char *buffer,
 		return -EFAULT;
 	if (sscanf(s, "%02X %02X", &reg, &val) < 2)
 		return -EINVAL;
-	if (reg > 255 || val > 255)
+	if (reg > EC_MAX || val > 255)
 		return -EINVAL;
 	if (ec_write(reg, val))
 		return -EIO;
@@ -1360,12 +1354,10 @@ static void lenovo_sl_procfs_exit(void)
 	}
 }
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,10,0)
 static const struct file_operations proc_fops = {
    	.read = lensl_ec_read_procmem,
    	.write = lensl_ec_write_procmem,
 };
-#endif
 
 static int lenovo_sl_procfs_init(void)
 {
@@ -1381,21 +1373,13 @@ static int lenovo_sl_procfs_init(void)
 	proc_dir->owner = THIS_MODULE;
 #endif
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,10,0)
 	proc_ec = proc_create(LENSL_PROC_EC, 0600, proc_dir, &proc_fops);
-#else
-	proc_ec = create_proc_entry(LENSL_PROC_EC, 0600, proc_dir);
-#endif
 	if (!proc_ec) {
 		vdbg_printk(LENSL_ERR,
 			"Failed to create proc entry acpi/%s/%s\n",
 			LENSL_PROC_DIRNAME, LENSL_PROC_EC);
 		return -ENOENT;
 	}
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3,10,0)
-	proc_ec->read_proc = lensl_ec_read_procmem;
-	proc_ec->write_proc = lensl_ec_write_procmem;
-#endif
 	vdbg_printk(LENSL_DEBUG, "Initialized procfs debugging interface\n");
 
 	return 0;
