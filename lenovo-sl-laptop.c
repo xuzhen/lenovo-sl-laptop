@@ -132,7 +132,11 @@ static int parse_strtoul(const char *buf,
 {
 	int res;
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,18,0)
 	res = strict_strtoul(buf, 0, value);
+#else
+	res = kstrtoul(buf, 0, value);
+#endif
 	if (res)
 		return res;
 	if (*value > max)
@@ -1290,7 +1294,7 @@ static int hkey_inputdev_init(void)
 
 static struct proc_dir_entry *proc_dir;
 
-int lensl_ec_read_procmem(struct file *file, char __user *buffer,
+ssize_t lensl_ec_read_procmem(struct file *file, char __user *buffer,
 		size_t count, loff_t *offset)
 {
 	int err, len = 0;
@@ -1326,7 +1330,7 @@ int lensl_ec_read_procmem(struct file *file, char __user *buffer,
 
 /* we expect input in the format "%02X %02X", where the first number is
    the EC register and the second is the value to be written */
-int lensl_ec_write_procmem(struct file *file, const char __user *buffer,
+ssize_t lensl_ec_write_procmem(struct file *file, const char __user *buffer,
 				size_t count, loff_t *offset)
 {
 	char s[7];
