@@ -1,5 +1,9 @@
 obj-m := lenovo-sl-laptop.o
-KVERSION = $(shell uname -r)
+ifndef KERNELRELEASE
+	KVERSION := $(shell uname -r)
+else
+	KVERSION := $(KERNELRELEASE)
+endif
 
 all:
 	$(MAKE) -C /lib/modules/$(KVERSION)/build M=$(PWD) modules
