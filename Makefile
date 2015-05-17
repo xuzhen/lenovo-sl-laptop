@@ -1,15 +1,10 @@
 obj-m := lenovo-sl-laptop.o
-ifndef KERNELRELEASE
-	KVERSION := $(shell uname -r)
-else
-	KVERSION := $(KERNELRELEASE)
-endif
+KERNELRELEASE ?= $(shell uname -r)
+KDIR ?= /lib/modules/$(KERNELRELEASE)/build
+PWD ?= $(shell pwd)
 
-all:
-	$(MAKE) -C /lib/modules/$(KVERSION)/build M=$(PWD) modules
+default: modules
+install: modules_install
 
-clean:
-	$(MAKE) -C /lib/modules/$(KVERSION)/build M=$(PWD) clean
-
-module:
-	$(MAKE) -C /usr/src/linux M=$(PWD) modules
+modules modules_install clean:
+	$(MAKE) -C $(KDIR) M=$(PWD) $@
