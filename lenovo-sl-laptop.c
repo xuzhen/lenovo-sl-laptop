@@ -46,6 +46,10 @@
 #include <linux/proc_fs.h>
 #include <linux/uaccess.h>
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,2,0)
+#include <acpi/video.h>
+#endif
+
 #define LENSL_MODULE_DESC "Lenovo ThinkPad SL Series Extras driver"
 #define LENSL_MODULE_NAME "lenovo-sl-laptop"
 
@@ -1405,7 +1409,10 @@ static int __init lenovo_sl_laptop_init(void)
 	int ret;
 	acpi_status status;
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,28)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,2,0)
+	if (acpi_video_get_backlight_type() == acpi_backlight_vendor)
+		control_backlight = 1;
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,28)
 	if (!acpi_video_backlight_support())
 		control_backlight = 1;
 #endif
