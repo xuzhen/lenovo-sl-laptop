@@ -976,7 +976,11 @@ static int hwmon_init(void)
 	int res;
 
 	pwm1_value = -1;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,9,0)
+	lensl_hwmon_device = hwmon_device_register_with_info(&lensl_pdev->dev, NULL, NULL, NULL, NULL);
+#else
 	lensl_hwmon_device = hwmon_device_register(&lensl_pdev->dev);
+#endif
 	if (!lensl_hwmon_device) {
 		vdbg_printk(LENSL_ERR, "Failed to register hwmon device\n");
 		return -ENODEV;
