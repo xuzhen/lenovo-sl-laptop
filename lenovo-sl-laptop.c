@@ -412,9 +412,9 @@ static int lensl_radio_rfkill_set_block(void *data, bool blocked)
 }
 
 static struct rfkill_ops rfkops = {
-	NULL,
-	lensl_radio_rfkill_query,
-	lensl_radio_rfkill_set_block,
+	.poll      = NULL,
+	.query     = lensl_radio_rfkill_query,
+	.set_block = lensl_radio_rfkill_set_block,
 };
 
 static int lensl_radio_new_rfkill(struct lensl_radio *radio,
