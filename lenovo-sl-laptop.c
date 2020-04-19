@@ -1366,10 +1366,17 @@ static void lenovo_sl_procfs_exit(void)
 	}
 }
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5,6,0)
 static const struct file_operations proc_fops = {
-   	.read = lensl_ec_read_procmem,
-   	.write = lensl_ec_write_procmem,
+	.read = lensl_ec_read_procmem,
+	.write = lensl_ec_write_procmem,
 };
+#else
+static const struct proc_ops proc_fops = {
+	.proc_read = lensl_ec_read_procmem,
+	.proc_write = lensl_ec_write_procmem,
+};
+#endif
 
 static int lenovo_sl_procfs_init(void)
 {
